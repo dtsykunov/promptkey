@@ -19,15 +19,19 @@ func NewApp() *App {
 
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+	debugf("app starting")
 	a.setupTray()
 	a.startHotkey(a.showPopup)
 }
 
 func (a *App) showPopup() {
 	x, y := getCursorPos()
+	debugf("showPopup: cursor pos (%d, %d)", x, y)
 	text, hasContext := captureSelectedText()
+	debugf("showPopup: hasContext=%v", hasContext)
 	a.selectedText = text
 	px, py := a.popupPosition(x, y, popupW, popupH)
+	debugf("showPopup: popup position (%d, %d)", px, py)
 	runtime.WindowSetSize(a.ctx, popupW, popupH)
 	runtime.WindowSetPosition(a.ctx, px, py)
 	runtime.WindowShow(a.ctx)
@@ -37,6 +41,7 @@ func (a *App) showPopup() {
 // SendPrompt is called by the frontend on submit.
 // Step 4: echoes to log. Step 5 will replace with streaming AI call.
 func (a *App) SendPrompt(instructions string) {
+	debugf("SendPrompt: instructions len=%d, hasContext=%v", len(instructions), a.selectedText != "")
 	msg := instructions
 	if a.selectedText != "" {
 		msg += "\n\n[context] " + a.selectedText

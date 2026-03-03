@@ -26,6 +26,19 @@ wails build    # production binary for current platform
 go test ./...  # run tests
 ```
 
+### Windows builds (run from `promptkey/`)
+
+```bash
+# Release — GUI subsystem, no console (distribution)
+wails build -platform windows/amd64
+
+# Debug — console window opens on launch, verbose timestamped logs
+wails build -platform windows/amd64 -ldflags "-H console" -tags debug -o build/bin/promptkey-debug.exe
+```
+
+`-H console` appended after Wails' own `-H windowsgui`; Go linker takes the last value → console subsystem wins.
+`-tags debug` activates `debug_mode.go` (logging) and excludes the no-op `debug.go`.
+
 ## Git
 
 Commits are atomic — one coherent change per commit. Subject lines are short and imperative. Add context in the body if needed, not the subject.

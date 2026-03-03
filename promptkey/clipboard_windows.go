@@ -115,9 +115,11 @@ func captureSelectedText() (string, bool) {
 			writeClipboardText(old)
 		}
 	}()
+	debugf("captureSelectedText: simulating Ctrl+C")
 	simulateCtrlC()
 	time.Sleep(150 * time.Millisecond)
 	newText, _ := readClipboardText()
+	debugf("captureSelectedText: read %d bytes, hasContext=%v", len(newText), newText != "" && newText != old)
 	if newText != "" && newText != old {
 		return newText, true
 	}

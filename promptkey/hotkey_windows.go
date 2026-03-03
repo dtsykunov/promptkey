@@ -39,7 +39,8 @@ type winMsg struct {
 func (a *App) startHotkey(cb func()) {
 	go func() {
 		runtime.LockOSThread()
-		pRegisterHotKey.Call(0, 1, modControl|modShift|modNoRepeat, vkSpace)
+		r, _, _ := pRegisterHotKey.Call(0, 1, modControl|modShift|modNoRepeat, vkSpace)
+		debugf("startHotkey: RegisterHotKey returned %d (0=failed)", r)
 		var msg winMsg
 		for {
 			r, _, _ := pGetMessage.Call(uintptr(unsafe.Pointer(&msg)), 0, 0, 0)
@@ -47,6 +48,7 @@ func (a *App) startHotkey(cb func()) {
 				break // WM_QUIT
 			}
 			if msg.Message == wmHotkey {
+				debugf("startHotkey: WM_HOTKEY fired")
 				cb()
 			}
 		}
