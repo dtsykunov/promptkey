@@ -33,7 +33,7 @@ go test ./...  # run tests
 wails build -platform windows/amd64
 
 # Debug — console window opens on launch, verbose timestamped logs
-wails build -platform windows/amd64 -ldflags "-H console" -tags debug -o build/bin/promptkey-debug.exe
+wails build -platform windows/amd64 -ldflags "-H console" -tags debug -o promptkey-debug.exe
 ```
 
 `-H console` appended after Wails' own `-H windowsgui`; Go linker takes the last value → console subsystem wins.
