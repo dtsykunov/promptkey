@@ -4,21 +4,29 @@
 
   let input
   let text = ''
+  let ready = false
 
   function submit() {
+    ready = false
     if (text.trim()) LogPrint(text.trim())
     text = ''
     Hide()
   }
 
   function dismiss() {
+    ready = false
     text = ''
     Hide()
   }
 
   onMount(() => {
-    EventsOn('popup:open', () => input?.focus())
-    window.addEventListener('blur', dismiss)
+    EventsOn('popup:open', () => {
+      ready = true
+      input?.focus()
+    })
+    window.addEventListener('blur', () => {
+      if (ready) dismiss()
+    })
   })
 </script>
 
