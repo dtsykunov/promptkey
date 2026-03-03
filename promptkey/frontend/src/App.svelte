@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte'
-  import { Hide, LogPrint } from '../wailsjs/runtime/runtime.js'
+  import { EventsOn, Hide, LogPrint } from '../wailsjs/runtime/runtime.js'
 
   let input
   let text = ''
@@ -17,7 +17,7 @@
   }
 
   onMount(() => {
-    window.addEventListener('focus', () => input?.focus())
+    EventsOn('popup:open', () => input?.focus())
     window.addEventListener('blur', dismiss)
   })
 </script>

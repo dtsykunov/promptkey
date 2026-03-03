@@ -28,6 +28,7 @@ func (a *App) showPopup() {
 	runtime.WindowSetSize(a.ctx, popupW, popupH)
 	runtime.WindowSetPosition(a.ctx, px, py)
 	runtime.WindowShow(a.ctx)
+	runtime.EventsEmit(a.ctx, "popup:open")
 }
 
 func (a *App) hidePopup() {
