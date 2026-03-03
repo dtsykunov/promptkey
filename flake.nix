@@ -50,6 +50,8 @@ MODULE_ROOTS=$(echo "$MODULE_ROOTS" | tr ' ' '\n' | sort -u | grep -v '^$')
 for dir in $MODULE_ROOTS; do
   echo "go vet: checking $dir"
   (cd "$dir" && go vet ./...) || exit 1
+  echo "go build (windows/amd64): checking $dir"
+  (cd "$dir" && GOOS=windows GOARCH=amd64 go build ./...) || exit 1
 done
 HOOK
             chmod +x .git/hooks/pre-commit
