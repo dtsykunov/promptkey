@@ -1,16 +1,38 @@
 <script>
   import { onMount } from 'svelte'
-  import { Hide } from '../wailsjs/runtime/runtime.js'
+  import { Hide, LogPrint } from '../wailsjs/runtime/runtime.js'
+
+  let input
+  let text = ''
+
+  function submit() {
+    if (text.trim()) LogPrint(text.trim())
+    text = ''
+    Hide()
+  }
+
+  function dismiss() {
+    text = ''
+    Hide()
+  }
 
   onMount(() => {
-    window.addEventListener('blur', () => Hide())
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') Hide()
-    })
+    window.addEventListener('focus', () => input?.focus())
+    window.addEventListener('blur', dismiss)
   })
 </script>
 
-<main></main>
+<main>
+  <input
+    bind:this={input}
+    bind:value={text}
+    placeholder="Ask anything…"
+    on:keydown={(e) => {
+      if (e.key === 'Enter')  submit()
+      if (e.key === 'Escape') dismiss()
+    }}
+  />
+</main>
 
 <style>
   main {
@@ -19,5 +41,23 @@
     background: #1e1e2e;
     border-radius: 8px;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    box-sizing: border-box;
+  }
+
+  input {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #cdd6f4;
+    font-size: 15px;
+    font-family: inherit;
+  }
+
+  input::placeholder {
+    color: #585b70;
   }
 </style>
