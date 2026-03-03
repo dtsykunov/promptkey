@@ -40,6 +40,7 @@
       if (e.key === 'Escape') dismiss()
     }}
   />
+  <button on:mousedown|preventDefault on:click={submit}>↵</button>
 </main>
 
 <style>
@@ -67,5 +68,19 @@
 
   input::placeholder {
     color: #585b70;
+  }
+
+  button {
+    background: transparent;
+    border: none;
+    color: #585b70;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 0 4px;
+    flex-shrink: 0;
+  }
+
+  button:hover {
+    color: #cdd6f4;
   }
 </style>
