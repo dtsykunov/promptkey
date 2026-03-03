@@ -44,6 +44,10 @@ git commit --author="Claude <claude@anthropic.com>" -m "subject"
 - Svelte components use scoped `<style>` blocks
 - `gofmt` and `go vet` are enforced by a pre-commit hook — do not skip or suppress
 
+## Documentation
+
+Always use the Context7 MCP for library and API documentation, code generation, and setup or configuration steps — without waiting to be asked.
+
 ## Philosophy
 
 Use idiomatic solutions — write Go like Go, Svelte like Svelte. Follow the conventions of the language and framework rather than importing patterns from elsewhere.
