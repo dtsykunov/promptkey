@@ -2,11 +2,11 @@
 
 ## Project
 
-PromptKey — a cross-platform tray utility (macOS + Windows) that captures selected text and opens a floating AI prompt popup near the cursor. See `README.md` for full context: architecture, UX flow, config schema, platform notes, and build order.
+PromptKey — a cross-platform tray utility (macOS + Windows) that captures selected text and opens a floating AI prompt popup near the cursor. See @README.md for full context: architecture, UX flow, config schema, platform notes, and build order.
 
 ## Stack
 
-Go + Wails v2 (Svelte frontend). Config persisted as JSON via `os.UserConfigDir()`. AI calls use the OpenAI `/chat/completions` streaming schema.
+Go + Wails v2 (Svelte frontend).
 
 ## Dev Environment
 
@@ -38,11 +38,11 @@ git commit --author="Claude <claude@anthropic.com>" -m "subject"
 
 ## Code
 
-- Run `gofmt` and `go vet` before committing
 - Return and wrap errors: `fmt.Errorf("context: %w", err)` — never panic
 - AI calls run in their own goroutine — never block main
 - No global mutable state outside the `App` struct
 - Svelte components use scoped `<style>` blocks
+- `gofmt` and `go vet` are enforced by a pre-commit hook — do not skip or suppress
 
 ## Philosophy
 
