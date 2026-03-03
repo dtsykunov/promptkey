@@ -1,6 +1,6 @@
 <script>
   import { onMount } from 'svelte'
-  import { Hide } from '../../wailsjs/runtime/runtime.js'
+  import { Hide } from '../wailsjs/runtime/runtime.js'
 
   onMount(() => {
     window.addEventListener('blur', () => Hide())
