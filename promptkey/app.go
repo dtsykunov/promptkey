@@ -9,7 +9,8 @@ import (
 const popupW, popupH = 480, 56
 
 type App struct {
-	ctx context.Context
+	ctx          context.Context
+	selectedText string
 }
 
 func NewApp() *App {
@@ -24,11 +25,24 @@ func (a *App) startup(ctx context.Context) {
 
 func (a *App) showPopup() {
 	x, y := getCursorPos()
+	text, hasContext := captureSelectedText()
+	a.selectedText = text
 	px, py := a.popupPosition(x, y, popupW, popupH)
 	runtime.WindowSetSize(a.ctx, popupW, popupH)
 	runtime.WindowSetPosition(a.ctx, px, py)
 	runtime.WindowShow(a.ctx)
-	runtime.EventsEmit(a.ctx, "popup:open")
+	runtime.EventsEmit(a.ctx, "popup:open", hasContext)
+}
+
+// SendPrompt is called by the frontend on submit.
+// Step 4: echoes to log. Step 5 will replace with streaming AI call.
+func (a *App) SendPrompt(instructions string) {
+	msg := instructions
+	if a.selectedText != "" {
+		msg += "\n\n[context] " + a.selectedText
+	}
+	runtime.LogPrint(a.ctx, msg)
+	a.selectedText = ""
 }
 
 func (a *App) hidePopup() {
