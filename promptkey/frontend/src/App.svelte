@@ -29,7 +29,7 @@
       contextCaptured = !!hasContext
       input?.focus()
     })
-    window.addEventListener('blur', () => {
+    EventsOn('wails:window:unfocus', () => {
       if (ready) dismiss()
     })
   })
