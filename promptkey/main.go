@@ -17,8 +17,10 @@ func main() {
 
 	err := wails.Run(&options.App{
 		Title:             "promptkey",
-		Width:             1,
-		Height:            1,
+		Width:             popupW,
+		Height:            popupH,
+		Frameless:         true,
+		AlwaysOnTop:       true,
 		StartHidden:       true,
 		HideWindowOnClose: true,
 		AssetServer: &assetserver.Options{
