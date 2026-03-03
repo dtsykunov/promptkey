@@ -12,8 +12,8 @@ Lives in the system tray. Works on macOS and Windows. Supports any OpenAI-compat
 
 1. Select some text (optional) in any application
 2. Press the hotkey (default: `Ctrl+Shift+Space`)
-3. A floating input appears near your cursor — the selected text is shown as context above the input field
-4. Type additional instructions, or press Enter to act on the selected text alone
+3. A floating input appears near your cursor — a paperclip icon indicates if context was captured
+4. Type instructions, or press Enter to act on the selected text alone
 5. The AI response streams into a result overlay
 6. **Copy** the result to clipboard, or **Close** to dismiss
 
@@ -21,9 +21,9 @@ Lives in the system tray. Works on macOS and Windows. Supports any OpenAI-compat
 
 ## Architecture
 
-**Two windows:** a frameless always-on-top popup (shown on hotkey, near cursor) and a normal settings window (opened from tray). Never use a single toggling window — it flickers.
+**Three windows:** a frameless always-on-top popup (shown on hotkey, near cursor), a frameless always-on-top result window (replaces popup after submit), and a normal settings window (opened from tray). Never show popup and result at the same time.
 
-**Hotkey flow:** Go detects hotkey → captures selected text → gets mouse position → calls `runtime.WindowShow` + `runtime.WindowSetPosition` → emits Wails event with captured text → frontend renders context preview and auto-focuses the instruction input.
+**Hotkey flow:** Go detects hotkey → captures selected text → gets mouse position → shows popup at calculated position → emits Wails event `popup:open` with `{ hasContext: bool }` → frontend shows paperclip indicator if context was captured and auto-focuses the input.
 
 **AI flow:** `app.SendPrompt(instructions, selectedText string)` (bound Go method) → goroutine streams response → `runtime.EventsEmit(ctx, "ai:chunk", chunk)` per token → `ai:done` on completion → frontend transitions to result view.
 
@@ -66,6 +66,7 @@ Stored at:
 ```json
 {
   "hotkey": "ctrl+shift+space",
+  "theme": "auto",
   "providers": [
     {
       "name": "Claude",
@@ -103,7 +104,7 @@ Any OpenAI-compatible provider works: OpenAI, Anthropic, Mistral, Groq, Ollama, 
 1. Tray icon appears, Quit exits cleanly
 2. Hotkey shows/hides a frameless window near cursor
 3. Text input in popup — Escape closes, Enter submits (echo only, no AI yet)
-4. Selected text capture — save clipboard, simulate copy, diff, restore; show preview in popup
+4. Selected text capture — save clipboard, simulate copy, diff, restore; show paperclip indicator in popup if context was captured
 5. Real streaming AI call, result shown in result view with Copy + Close buttons
 6. Config system — load/save JSON, settings window to manage providers and hotkey
 7. Polish — error states, permission prompts, transitions, opacity
