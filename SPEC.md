@@ -309,8 +309,8 @@ Follow this order — each step is a working, shippable increment:
 2. **Hotkey + popup**: hotkey shows frameless window near cursor. Escape/blur closes. No input yet.
 3. **Input + echo**: text input in popup. Enter logs to console. No AI.
 4. **Context capture**: clipboard simulation. Paperclip icon shown if context captured. Still echo-only.
-5. **AI streaming**: real API call. Result window with spinner → streaming text → Copy/Close.
-6. **Settings window**: providers, hotkey, theme. Config persistence. Tray menu switch.
+5. **Settings window**: providers, hotkey, theme. Config persistence. Tray menu switch.
+6. **AI streaming**: real API call. Result window with spinner → streaming text → Copy/Close.
 7. **Polish**: error states, warning tray icon, first-run notification, theme switching, edge cases.
 
 ---
