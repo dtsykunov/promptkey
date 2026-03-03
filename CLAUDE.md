@@ -33,11 +33,15 @@ go test ./...  # run tests
 wails build -platform windows/amd64
 
 # Debug — console window opens on launch, verbose timestamped logs
-wails build -platform windows/amd64 -ldflags "-H console" -tags debug -o promptkey-debug.exe
+wails build -platform windows/amd64 -tags debug -o promptkey-debug.exe
+go run ./cmd/patchsubsystem build/bin/promptkey-debug.exe
 ```
 
-`-H console` appended after Wails' own `-H windowsgui`; Go linker takes the last value → console subsystem wins.
 `-tags debug` activates `debug_mode.go` (logging) and excludes the no-op `debug.go`.
+
+The two-step build is necessary because Wails hardcodes `-H windowsgui` in its
+linker invocation and prepends user ldflags before it, so `-H console` always
+loses. `patchsubsystem` edits the PE subsystem field directly (GUI=2 → CONSOLE=3).
 
 ## Git
 
