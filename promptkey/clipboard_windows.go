@@ -105,21 +105,37 @@ func writeClipboardText(text string) {
 	pCloseClipboard.Call()
 }
 
-// captureSelectedText saves the clipboard, simulates Ctrl+C, reads the new
-// clipboard, restores the original, and returns the selected text if captured.
-// Non-text clipboard contents (images, files) are not restored — known limitation.
+// captureSelectedText returns the text currently selected in the focused
+// window. It uses a two-tier strategy:
+//
+//   - Tier 1 (UIA): asks the focused window directly via Windows UI Automation.
+//     Works for Chrome 126+, Edge, and most native apps. No clipboard touched.
+//
+//   - Tier 2 (clipboard diff): simulates Ctrl+C, reads the clipboard, then
+//     restores the original contents. Fallback for Firefox, older Chrome, and
+//     legacy Win32 controls that don't expose a UIA TextPattern.
 func captureSelectedText() (string, bool) {
+	if text, ok := selectedTextViaUIA(); ok {
+		return text, true
+	}
+	return captureViaClipboard()
+}
+
+// captureViaClipboard is the Tier 2 capture path: save clipboard, simulate
+// Ctrl+C, read new clipboard, restore original.
+// Non-text clipboard contents (images, files) are not restored — known limitation.
+func captureViaClipboard() (string, bool) {
 	old, hadText := readClipboardText()
 	defer func() {
 		if hadText {
 			writeClipboardText(old)
 		}
 	}()
-	debugf("captureSelectedText: simulating Ctrl+C")
+	debugf("captureViaClipboard: simulating Ctrl+C")
 	simulateCtrlC()
 	time.Sleep(150 * time.Millisecond)
 	newText, _ := readClipboardText()
-	debugf("captureSelectedText: read %d bytes, hasContext=%v", len(newText), newText != "" && newText != old)
+	debugf("captureViaClipboard: read %d bytes, hasContext=%v", len(newText), newText != "" && newText != old)
 	if newText != "" && newText != old {
 		return newText, true
 	}
