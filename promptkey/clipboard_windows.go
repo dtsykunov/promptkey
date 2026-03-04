@@ -33,6 +33,7 @@ var (
 	pGlobalLock       = kernel32.NewProc("GlobalLock")
 	pGlobalUnlock     = kernel32.NewProc("GlobalUnlock")
 	pSendInput        = user32.NewProc("SendInput")
+	pGetAsyncKeyState = user32.NewProc("GetAsyncKeyState")
 )
 
 type keyboardInput struct {
@@ -56,18 +57,23 @@ type winInput struct {
 // the text area to the menu bar. Releasing the modifiers before capture
 // clears menu mode and ensures both UIA and simulated Ctrl+C work correctly.
 func releaseModifiers() {
-	inputs := [5]winInput{
-		{Type: inputKeyboard, Ki: keyboardInput{Vk: vkShift, Flags: keyeventfKeyup}},
-		{Type: inputKeyboard, Ki: keyboardInput{Vk: vkControl, Flags: keyeventfKeyup}},
-		{Type: inputKeyboard, Ki: keyboardInput{Vk: vkAlt, Flags: keyeventfKeyup}},
-		{Type: inputKeyboard, Ki: keyboardInput{Vk: vkLWin, Flags: keyeventfKeyup}},
-		{Type: inputKeyboard, Ki: keyboardInput{Vk: vkRWin, Flags: keyeventfKeyup}},
+	all := [5]uint16{vkShift, vkControl, vkAlt, vkLWin, vkRWin}
+	var inputs [5]winInput
+	n := 0
+	for _, vk := range all {
+		state, _, _ := pGetAsyncKeyState.Call(uintptr(vk))
+		if state&0x8000 != 0 { // high bit set = key is currently down
+			inputs[n] = winInput{Type: inputKeyboard, Ki: keyboardInput{Vk: vk, Flags: keyeventfKeyup}}
+			n++
+		}
 	}
-	pSendInput.Call(
-		uintptr(len(inputs)),
-		uintptr(unsafe.Pointer(&inputs[0])),
-		unsafe.Sizeof(inputs[0]),
-	)
+	if n > 0 {
+		pSendInput.Call(
+			uintptr(n),
+			uintptr(unsafe.Pointer(&inputs[0])),
+			unsafe.Sizeof(inputs[0]),
+		)
+	}
 }
 
 func simulateCtrlC() {
