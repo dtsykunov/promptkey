@@ -9,9 +9,7 @@ import (
 const popupW, popupH = 480, 56
 
 type App struct {
-	ctx          context.Context
-	cfg          Config
-	selectedText string
+	ctx context.Context
 }
 
 func NewApp() *App {
@@ -20,8 +18,6 @@ func NewApp() *App {
 
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
-	a.cfg = loadConfig()
-	a.saveConfig() // ensure config file exists on first run so the user can find and edit it
 	debugf("app starting")
 	a.setupTray()
 	a.startHotkey(a.showPopup)
@@ -30,33 +26,19 @@ func (a *App) startup(ctx context.Context) {
 func (a *App) showPopup() {
 	x, y := getCursorPos()
 	debugf("showPopup: cursor pos (%d, %d)", x, y)
-	var text string
-	var hasContext bool
-	if a.cfg.CaptureContext {
-		text, hasContext = captureSelectedText(a.cfg.ClipboardCapture)
-		debugf("showPopup: hasContext=%v", hasContext)
-		debugf("showPopup: captured: %q", text)
-	}
-	a.selectedText = text
 	px, py := a.popupPosition(x, y, popupW, popupH)
 	debugf("showPopup: popup position (%d, %d)", px, py)
 	runtime.WindowSetSize(a.ctx, popupW, popupH)
 	runtime.WindowSetPosition(a.ctx, px, py)
 	runtime.WindowShow(a.ctx)
 	a.startFocusWatcher()
-	runtime.EventsEmit(a.ctx, "popup:open", hasContext)
+	runtime.EventsEmit(a.ctx, "popup:open")
 }
 
 // SendPrompt is called by the frontend on submit.
-// Step 4: echoes to log. Step 5 will replace with streaming AI call.
 func (a *App) SendPrompt(instructions string) {
-	debugf("SendPrompt: instructions=%q, hasContext=%v", instructions, a.selectedText != "")
-	msg := instructions
-	if a.selectedText != "" {
-		msg += "\n\n[context] " + a.selectedText
-	}
-	runtime.LogPrint(a.ctx, msg)
-	a.selectedText = ""
+	debugf("SendPrompt: instructions=%q", instructions)
+	runtime.LogPrint(a.ctx, instructions)
 }
 
 func (a *App) hidePopup() {

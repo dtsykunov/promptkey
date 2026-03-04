@@ -6,11 +6,9 @@
   let input
   let text = ''
   let ready = false
-  let contextCaptured = false
 
   function submit() {
     ready = false
-    contextCaptured = false
     SendPrompt(text.trim())
     text = ''
     Hide()
@@ -18,15 +16,13 @@
 
   function dismiss() {
     ready = false
-    contextCaptured = false
     text = ''
     Hide()
   }
 
   onMount(() => {
-    EventsOn('popup:open', (hasContext) => {
+    EventsOn('popup:open', () => {
       ready = true
-      contextCaptured = !!hasContext
       input?.focus()
     })
     EventsOn('popup:dismiss', dismiss)
@@ -34,13 +30,6 @@
 </script>
 
 <main>
-  {#if contextCaptured}
-    <svg class="paperclip" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
-         width="16" height="16" fill="none" stroke="currentColor"
-         stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
-    </svg>
-  {/if}
   <input
     bind:this={input}
     bind:value={text}
@@ -64,12 +53,6 @@
     align-items: center;
     padding: 0 12px;
     box-sizing: border-box;
-  }
-
-  .paperclip {
-    color: #585b70;
-    flex-shrink: 0;
-    margin-right: 6px;
   }
 
   input {
