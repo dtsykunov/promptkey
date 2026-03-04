@@ -163,8 +163,10 @@ func isFocusedWindowConsole() bool {
 //     Skipped for console windows (Ctrl+C would send SIGINT instead of copying)
 //     and when clipboardCapture is false.
 func captureSelectedText(clipboardCapture bool) (string, bool) {
-	releaseModifiers()
-	time.Sleep(30 * time.Millisecond) // allow menu mode to clear before querying focus
+	// Tier 1: query UIA before releasing any modifiers. At hotkey-fire time
+	// the target app has received Alt key-down but not key-up, so focus is
+	// still on the text element. Releasing Alt first would cause the app to
+	// process the key-up, post SC_KEYMENU, and shift focus to the menu bar.
 	if text, ok := selectedTextViaUIA(); ok {
 		return text, true
 	}
@@ -176,6 +178,11 @@ func captureSelectedText(clipboardCapture bool) (string, bool) {
 		debugf("captureSelectedText: skipping Ctrl+C simulation for console window")
 		return "", false
 	}
+	// Tier 2: release held modifiers immediately before simulating Ctrl+C,
+	// with no sleep. A sleep here would give the target app's message loop
+	// time to process the Alt key-up, activate the menu bar, and steal focus
+	// from the text area — causing Ctrl+C to land on the menu instead.
+	releaseModifiers()
 	return captureViaClipboard()
 }
 
