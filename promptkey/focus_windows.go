@@ -15,7 +15,7 @@ var (
 	pFindWindowW         = user32.NewProc("FindWindowW")
 )
 
-func (a *App) startFocusWatcher() {
+func (a *App) startFocusWatcher(stopCh <-chan struct{}) {
 	go func() {
 		title, _ := syscall.UTF16PtrFromString("promptkey")
 		hwnd, _, _ := pFindWindowW.Call(0, uintptr(unsafe.Pointer(title)))
@@ -24,7 +24,11 @@ func (a *App) startFocusWatcher() {
 		}
 		// Wait for the popup to become the foreground window (up to 500 ms).
 		for i := 0; i < 10; i++ {
-			time.Sleep(50 * time.Millisecond)
+			select {
+			case <-stopCh:
+				return
+			case <-time.After(50 * time.Millisecond):
+			}
 			fg, _, _ := pGetForegroundWindow.Call()
 			if fg == hwnd {
 				break
@@ -32,7 +36,11 @@ func (a *App) startFocusWatcher() {
 		}
 		// Poll until a different window takes the foreground.
 		for {
-			time.Sleep(80 * time.Millisecond)
+			select {
+			case <-stopCh:
+				return
+			case <-time.After(80 * time.Millisecond):
+			}
 			fg, _, _ := pGetForegroundWindow.Call()
 			if fg != hwnd {
 				wailsruntime.WindowHide(a.ctx)
