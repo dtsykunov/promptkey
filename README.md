@@ -67,6 +67,7 @@ Stored at:
 {
   "hotkey": "ctrl+alt+`",
   "captureContext": true,
+  "clipboardCapture": true,
   "theme": "auto",
   "providers": [
     {

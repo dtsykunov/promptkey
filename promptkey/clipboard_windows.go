@@ -34,6 +34,7 @@ var (
 	pGlobalUnlock     = kernel32.NewProc("GlobalUnlock")
 	pSendInput        = user32.NewProc("SendInput")
 	pGetAsyncKeyState = user32.NewProc("GetAsyncKeyState")
+	pGetClassName     = user32.NewProc("GetClassNameW")
 )
 
 type keyboardInput struct {
@@ -135,20 +136,45 @@ func writeClipboardText(text string) {
 	pCloseClipboard.Call()
 }
 
+// isFocusedWindowConsole reports whether the foreground window is a traditional
+// Windows console (class "ConsoleWindowClass"). This covers cmd.exe, legacy
+// PowerShell, and any other app hosted by conhost.exe.
+// Windows Terminal uses a different class and is handled by Tier 1 (UIA).
+func isFocusedWindowConsole() bool {
+	hwnd, _, _ := pGetForegroundWindow.Call()
+	if hwnd == 0 {
+		return false
+	}
+	var buf [256]uint16
+	pGetClassName.Call(hwnd, uintptr(unsafe.Pointer(&buf[0])), uintptr(len(buf)))
+	return syscall.UTF16ToString(buf[:]) == "ConsoleWindowClass"
+}
+
 // captureSelectedText returns the text currently selected in the focused
 // window. It uses a two-tier strategy:
 //
 //   - Tier 1 (UIA): asks the focused window directly via Windows UI Automation.
-//     Works for Chrome 126+, Edge, and most native apps. No clipboard touched.
+//     Works for Chrome 126+, Edge, Windows Terminal, and most native apps.
+//     No clipboard touched.
 //
 //   - Tier 2 (clipboard diff): simulates Ctrl+C, reads the clipboard, then
 //     restores the original contents. Fallback for Firefox, older Chrome, and
 //     legacy Win32 controls that don't expose a UIA TextPattern.
-func captureSelectedText() (string, bool) {
+//     Skipped for console windows (Ctrl+C would send SIGINT instead of copying)
+//     and when clipboardCapture is false.
+func captureSelectedText(clipboardCapture bool) (string, bool) {
 	releaseModifiers()
 	time.Sleep(30 * time.Millisecond) // allow menu mode to clear before querying focus
 	if text, ok := selectedTextViaUIA(); ok {
 		return text, true
+	}
+	if !clipboardCapture {
+		debugf("captureSelectedText: Tier 2 disabled in config")
+		return "", false
+	}
+	if isFocusedWindowConsole() {
+		debugf("captureSelectedText: skipping Ctrl+C simulation for console window")
+		return "", false
 	}
 	return captureViaClipboard()
 }

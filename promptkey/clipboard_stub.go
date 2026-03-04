@@ -2,4 +2,4 @@
 
 package main
 
-func captureSelectedText() (string, bool) { return "", false }
+func captureSelectedText(_ bool) (string, bool) { return "", false }

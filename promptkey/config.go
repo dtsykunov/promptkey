@@ -9,11 +9,15 @@ import (
 
 // Config holds persistent user preferences.
 type Config struct {
-	CaptureContext bool `json:"captureContext"`
+	CaptureContext   bool `json:"captureContext"`
+	ClipboardCapture bool `json:"clipboardCapture"`
 }
 
 func defaultConfig() Config {
-	return Config{CaptureContext: true}
+	return Config{
+		CaptureContext:   true,
+		ClipboardCapture: true,
+	}
 }
 
 func configPath() (string, error) {

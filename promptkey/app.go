@@ -33,7 +33,7 @@ func (a *App) showPopup() {
 	var text string
 	var hasContext bool
 	if a.cfg.CaptureContext {
-		text, hasContext = captureSelectedText()
+		text, hasContext = captureSelectedText(a.cfg.ClipboardCapture)
 		debugf("showPopup: hasContext=%v", hasContext)
 		debugf("showPopup: captured: %q", text)
 	}

@@ -21,6 +21,7 @@ func (a *App) onTrayReady() {
 	systray.SetTooltip("PromptKey")
 
 	mCapture := systray.AddMenuItemCheckbox("Capture context", "Capture selected text when the popup opens", a.cfg.CaptureContext)
+	mClipboard := systray.AddMenuItemCheckbox("Clipboard capture", "Fall back to Ctrl+C simulation when UIA fails (disabled automatically for console windows)", a.cfg.ClipboardCapture)
 	systray.AddSeparator()
 	mQuit := systray.AddMenuItem("Quit", "Quit PromptKey")
 
@@ -34,6 +35,15 @@ func (a *App) onTrayReady() {
 				} else {
 					mCapture.Check()
 					a.cfg.CaptureContext = true
+				}
+				a.saveConfig()
+			case <-mClipboard.ClickedCh:
+				if mClipboard.Checked() {
+					mClipboard.Uncheck()
+					a.cfg.ClipboardCapture = false
+				} else {
+					mClipboard.Check()
+					a.cfg.ClipboardCapture = true
 				}
 				a.saveConfig()
 			case <-mQuit.ClickedCh:
