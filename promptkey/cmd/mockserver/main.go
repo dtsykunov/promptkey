@@ -55,14 +55,21 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var firstUser string
+	var system, firstUser string
 	for _, m := range req.Messages {
-		if m.Role == "user" {
-			firstUser = m.Content
-			break
+		switch m.Role {
+		case "system":
+			system = m.Content
+		case "user":
+			if firstUser == "" {
+				firstUser = m.Content
+			}
 		}
 	}
 	log.Printf("model=%q message=%q", req.Model, firstUser)
+	if system != "" {
+		log.Printf("system prompt:\n%s", system)
+	}
 
 	if req.Model == "error" {
 		http.Error(w, "mock error: model is \"error\"", http.StatusInternalServerError)
