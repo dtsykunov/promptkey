@@ -12,13 +12,22 @@ import (
 )
 
 const popupW, popupH = 480, 56
+const popupHCtx = 76 // popupH + 20px context bar
 const settingsW, settingsH = 560, 480
+
+// PopupBar carries context bar data emitted with popup:open.
+type PopupBar struct {
+	HasClipboard bool   `json:"hasClipboard"`
+	App          string `json:"app"`
+	DateTime     string `json:"datetime"`
+}
 
 type App struct {
 	ctx            context.Context
 	cfg            Config
 	cancelStream   context.CancelFunc
 	lastPrompt     string
+	lastCtx        Context
 	cursorX        int
 	cursorY        int
 	inResultView   bool
@@ -33,6 +42,9 @@ func NewApp() *App {
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	a.cfg = loadConfig()
+	if !a.cfg.Context.Initialized {
+		a.cfg.Context = defaultContextConfig()
+	}
 	a.saveConfig()
 	debugf("app starting")
 	a.setupTray()
@@ -44,7 +56,21 @@ func (a *App) showPopup() {
 	debugf("showPopup: cursor pos (%d, %d)", x, y)
 	a.cursorX, a.cursorY = x, y
 	a.inResultView = false
-	px, py := a.calcPosition(x, y, popupW, popupH)
+
+	// Capture context on hotkey press.
+	a.lastCtx = CaptureContext(a.cfg.Context)
+	bar := PopupBar{
+		HasClipboard: a.cfg.Context.Enabled && a.cfg.Context.Clipboard && a.lastCtx.Clipboard != "",
+		App:          a.lastCtx.App,
+		DateTime:     a.lastCtx.DateTime,
+	}
+	hasBar := bar.HasClipboard || bar.App != "" || bar.DateTime != ""
+	h := popupH
+	if hasBar {
+		h = popupHCtx
+	}
+
+	px, py := a.calcPosition(x, y, popupW, h)
 	debugf("showPopup: popup position (%d, %d)", px, py)
 
 	// Stop any previous focus watcher.
@@ -54,11 +80,11 @@ func (a *App) showPopup() {
 	a.stopFocus = make(chan struct{})
 
 	runtime.WindowSetAlwaysOnTop(a.ctx, true)
-	runtime.WindowSetSize(a.ctx, popupW, popupH)
+	runtime.WindowSetSize(a.ctx, popupW, h)
 	runtime.WindowSetPosition(a.ctx, px, py)
 	runtime.WindowShow(a.ctx)
 	a.startFocusWatcher(a.stopFocus)
-	runtime.EventsEmit(a.ctx, "popup:open")
+	runtime.EventsEmit(a.ctx, "popup:open", bar)
 }
 
 func (a *App) showSettings() {
@@ -165,6 +191,7 @@ func (a *App) SendPrompt(instructions string) {
 		runtime.EventsEmit(a.ctx, "ai:error", err.Error())
 		return
 	}
+	p.SystemPrompt = RenderTemplate(p.SystemPrompt, a.lastCtx)
 
 	ctx, cancel := context.WithCancel(a.ctx)
 	a.cancelStream = cancel

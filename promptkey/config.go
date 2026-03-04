@@ -16,13 +16,35 @@ type Provider struct {
 	SystemPrompt string `json:"systemPrompt"`
 }
 
+// ContextConfig controls which context variables are captured on hotkey press.
+type ContextConfig struct {
+	Initialized bool `json:"initialized"` // sentinel: false = apply defaults on first load
+	Enabled     bool `json:"enabled"`
+	Clipboard   bool `json:"clipboard"`
+	ActiveApp   bool `json:"activeApp"`
+	DateTime    bool `json:"dateTime"`
+	OSLocale    bool `json:"osLocale"`
+}
+
+func defaultContextConfig() ContextConfig {
+	return ContextConfig{
+		Initialized: true,
+		Enabled:     true,
+		Clipboard:   true,
+		ActiveApp:   true,
+		DateTime:    true,
+		OSLocale:    true,
+	}
+}
+
 // Config is the top-level app configuration.
 type Config struct {
-	Hotkey         string     `json:"hotkey"`
-	Providers      []Provider `json:"providers"`
-	ActiveProvider string     `json:"activeProvider"`
-	ResultW        int        `json:"resultWidth"`
-	ResultH        int        `json:"resultHeight"`
+	Hotkey         string        `json:"hotkey"`
+	Providers      []Provider    `json:"providers"`
+	ActiveProvider string        `json:"activeProvider"`
+	ResultW        int           `json:"resultWidth"`
+	ResultH        int           `json:"resultHeight"`
+	Context        ContextConfig `json:"context"`
 }
 
 const defaultResultW, defaultResultH = 480, 320
