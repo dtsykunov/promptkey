@@ -13,7 +13,9 @@ const (
 	gmemMoveable   = 0x0002
 	inputKeyboard  = 1
 	keyeventfKeyup = 0x0002
+	vkShift        = 0x10
 	vkControl      = 0x11
+	vkAlt          = 0x12
 	vkC            = 0x43
 )
 
@@ -44,6 +46,24 @@ type winInput struct {
 	Type uint32
 	_    uint32 // align union to 8-byte boundary
 	Ki   keyboardInput
+}
+
+// releaseModifiers injects key-up events for the common hotkey modifiers.
+// This is necessary when the hotkey includes Alt: pressing Alt activates
+// Windows menu mode in the focused window, which shifts UIA focus away from
+// the text area to the menu bar. Releasing the modifiers before capture
+// clears menu mode and ensures both UIA and simulated Ctrl+C work correctly.
+func releaseModifiers() {
+	inputs := [3]winInput{
+		{Type: inputKeyboard, Ki: keyboardInput{Vk: vkShift, Flags: keyeventfKeyup}},
+		{Type: inputKeyboard, Ki: keyboardInput{Vk: vkControl, Flags: keyeventfKeyup}},
+		{Type: inputKeyboard, Ki: keyboardInput{Vk: vkAlt, Flags: keyeventfKeyup}},
+	}
+	pSendInput.Call(
+		uintptr(len(inputs)),
+		uintptr(unsafe.Pointer(&inputs[0])),
+		unsafe.Sizeof(inputs[0]),
+	)
 }
 
 func simulateCtrlC() {
@@ -115,6 +135,8 @@ func writeClipboardText(text string) {
 //     restores the original contents. Fallback for Firefox, older Chrome, and
 //     legacy Win32 controls that don't expose a UIA TextPattern.
 func captureSelectedText() (string, bool) {
+	releaseModifiers()
+	time.Sleep(30 * time.Millisecond) // allow menu mode to clear before querying focus
 	if text, ok := selectedTextViaUIA(); ok {
 		return text, true
 	}
