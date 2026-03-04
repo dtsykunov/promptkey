@@ -29,12 +29,8 @@ go test ./...  # run tests
 ### Windows builds (run from `promptkey/`)
 
 ```bash
-# Release — GUI subsystem, no console (distribution)
-wails build -platform windows/amd64
-
-# Debug — console window opens on launch, verbose timestamped logs
-wails build -platform windows/amd64 -tags debug -o promptkey-debug.exe
-go run ./cmd/patchsubsystem build/bin/promptkey-debug.exe
+make build   # release — GUI subsystem, no console
+make debug   # debug — console window, verbose logs
 ```
 
 `-tags debug` activates `debug_mode.go` (logging) and excludes the no-op `debug.go`.
