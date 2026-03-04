@@ -10,6 +10,7 @@ const popupW, popupH = 480, 56
 
 type App struct {
 	ctx          context.Context
+	cfg          Config
 	selectedText string
 }
 
@@ -19,6 +20,7 @@ func NewApp() *App {
 
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
+	a.cfg = loadConfig()
 	debugf("app starting")
 	a.setupTray()
 	a.startHotkey(a.showPopup)
@@ -27,9 +29,13 @@ func (a *App) startup(ctx context.Context) {
 func (a *App) showPopup() {
 	x, y := getCursorPos()
 	debugf("showPopup: cursor pos (%d, %d)", x, y)
-	text, hasContext := captureSelectedText()
-	debugf("showPopup: hasContext=%v", hasContext)
-	debugf("showPopup: captured: %q", text)
+	var text string
+	var hasContext bool
+	if a.cfg.CaptureContext {
+		text, hasContext = captureSelectedText()
+		debugf("showPopup: hasContext=%v", hasContext)
+		debugf("showPopup: captured: %q", text)
+	}
 	a.selectedText = text
 	px, py := a.popupPosition(x, y, popupW, popupH)
 	debugf("showPopup: popup position (%d, %d)", px, py)

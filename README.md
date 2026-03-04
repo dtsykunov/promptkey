@@ -66,6 +66,7 @@ Stored at:
 ```json
 {
   "hotkey": "ctrl+alt+`",
+  "captureContext": true,
   "theme": "auto",
   "providers": [
     {
