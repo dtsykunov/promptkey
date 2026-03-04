@@ -21,6 +21,7 @@ func NewApp() *App {
 func (a *App) startup(ctx context.Context) {
 	a.ctx = ctx
 	a.cfg = loadConfig()
+	a.saveConfig() // ensure config file exists on first run so the user can find and edit it
 	debugf("app starting")
 	a.setupTray()
 	a.startHotkey(a.showPopup)
