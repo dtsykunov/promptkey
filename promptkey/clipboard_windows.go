@@ -17,6 +17,8 @@ const (
 	vkControl      = 0x11
 	vkAlt          = 0x12
 	vkC            = 0x43
+	vkLWin         = 0x5B
+	vkRWin         = 0x5C
 )
 
 var (
@@ -54,10 +56,12 @@ type winInput struct {
 // the text area to the menu bar. Releasing the modifiers before capture
 // clears menu mode and ensures both UIA and simulated Ctrl+C work correctly.
 func releaseModifiers() {
-	inputs := [3]winInput{
+	inputs := [5]winInput{
 		{Type: inputKeyboard, Ki: keyboardInput{Vk: vkShift, Flags: keyeventfKeyup}},
 		{Type: inputKeyboard, Ki: keyboardInput{Vk: vkControl, Flags: keyeventfKeyup}},
 		{Type: inputKeyboard, Ki: keyboardInput{Vk: vkAlt, Flags: keyeventfKeyup}},
+		{Type: inputKeyboard, Ki: keyboardInput{Vk: vkLWin, Flags: keyeventfKeyup}},
+		{Type: inputKeyboard, Ki: keyboardInput{Vk: vkRWin, Flags: keyeventfKeyup}},
 	}
 	pSendInput.Call(
 		uintptr(len(inputs)),
