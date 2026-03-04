@@ -100,12 +100,37 @@ func handler(w http.ResponseWriter, r *http.Request) {
 	flusher.Flush()
 }
 
+type modelsResponse struct {
+	Object string `json:"object"`
+	Data   []struct {
+		ID     string `json:"id"`
+		Object string `json:"object"`
+	} `json:"data"`
+}
+
+func modelsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	resp := modelsResponse{Object: "list"}
+	for _, name := range []string{"mock-gpt-4o", "mock-gpt-3.5-turbo", "mock-claude", "error"} {
+		resp.Data = append(resp.Data, struct {
+			ID     string `json:"id"`
+			Object string `json:"object"`
+		}{ID: name, Object: "model"})
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resp)
+}
+
 func main() {
 	addr := flag.String("addr", ":11435", "listen address")
 	flag.Parse()
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/v1/chat/completions", handler)
+	mux.HandleFunc("/v1/models", modelsHandler)
 
 	log.Printf("mock server listening on %s", *addr)
 	if err := http.ListenAndServe(*addr, mux); err != nil {

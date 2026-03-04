@@ -20,11 +20,20 @@ func (a *App) onTrayReady() {
 	systray.SetIcon(trayIcon)
 	systray.SetTooltip("PromptKey")
 
+	mSettings := systray.AddMenuItem("Settings", "Open settings")
+	systray.AddSeparator()
 	mQuit := systray.AddMenuItem("Quit", "Quit PromptKey")
 
 	go func() {
-		<-mQuit.ClickedCh
-		systray.Quit()
-		runtime.Quit(a.ctx)
+		for {
+			select {
+			case <-mSettings.ClickedCh:
+				a.showSettings()
+			case <-mQuit.ClickedCh:
+				systray.Quit()
+				runtime.Quit(a.ctx)
+				return
+			}
+		}
 	}()
 }

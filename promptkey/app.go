@@ -2,22 +2,28 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
+	"net/http"
 
 	"github.com/wailsapp/wails/v2/pkg/runtime"
 )
 
 const popupW, popupH = 480, 56
+const settingsW, settingsH = 560, 480
 
 type App struct {
-	ctx          context.Context
-	cfg          Config
-	cancelStream context.CancelFunc
-	lastPrompt   string
-	cursorX      int
-	cursorY      int
-	inResultView bool
-	stopFocus    chan struct{}
+	ctx            context.Context
+	cfg            Config
+	cancelStream   context.CancelFunc
+	lastPrompt     string
+	cursorX        int
+	cursorY        int
+	inResultView   bool
+	stopFocus      chan struct{}
+	hotkeyThreadID uint32 // atomic; written by hotkey goroutine
 }
 
 func NewApp() *App {
@@ -47,11 +53,77 @@ func (a *App) showPopup() {
 	}
 	a.stopFocus = make(chan struct{})
 
+	runtime.WindowSetAlwaysOnTop(a.ctx, true)
 	runtime.WindowSetSize(a.ctx, popupW, popupH)
 	runtime.WindowSetPosition(a.ctx, px, py)
 	runtime.WindowShow(a.ctx)
 	a.startFocusWatcher(a.stopFocus)
 	runtime.EventsEmit(a.ctx, "popup:open")
+}
+
+func (a *App) showSettings() {
+	runtime.WindowSetAlwaysOnTop(a.ctx, false)
+	runtime.WindowSetSize(a.ctx, settingsW, settingsH)
+	runtime.WindowCenter(a.ctx)
+	runtime.WindowShow(a.ctx)
+	runtime.EventsEmit(a.ctx, "settings:open")
+}
+
+// GetConfig returns the current config to the frontend.
+func (a *App) GetConfig() Config { return a.cfg }
+
+// SaveSettings validates and persists a new config, restarting the hotkey if it changed.
+func (a *App) SaveSettings(cfg Config) string {
+	key := cfg.Hotkey
+	if key == "" {
+		key = defaultHotkey
+	}
+	if _, _, err := parseHotkey(key); err != nil {
+		return fmt.Sprintf("invalid hotkey: %v", err)
+	}
+	hotkeyChanged := cfg.Hotkey != a.cfg.Hotkey
+	a.cfg = cfg
+	a.saveConfig()
+	if hotkeyChanged {
+		a.resetHotkey()
+	}
+	return ""
+}
+
+// modelsResponse is the OpenAI /models response shape.
+type modelsResponse struct {
+	Data []struct {
+		ID string `json:"id"`
+	} `json:"data"`
+}
+
+// FetchModels fetches available model IDs from an OpenAI-compatible /models endpoint.
+func (a *App) FetchModels(baseURL, apiKey string) ([]string, error) {
+	req, err := http.NewRequest(http.MethodGet, baseURL+"/models", nil)
+	if err != nil {
+		return nil, fmt.Errorf("create request: %w", err)
+	}
+	if apiKey != "" {
+		req.Header.Set("Authorization", "Bearer "+apiKey)
+	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("http: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		body, _ := io.ReadAll(resp.Body)
+		return nil, fmt.Errorf("api error %d: %s", resp.StatusCode, body)
+	}
+	var mr modelsResponse
+	if err := json.NewDecoder(resp.Body).Decode(&mr); err != nil {
+		return nil, fmt.Errorf("decode: %w", err)
+	}
+	ids := make([]string, 0, len(mr.Data))
+	for _, d := range mr.Data {
+		ids = append(ids, d.ID)
+	}
+	return ids, nil
 }
 
 // SendPrompt is called by the frontend on submit.

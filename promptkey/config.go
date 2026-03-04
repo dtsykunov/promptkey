@@ -18,6 +18,7 @@ type Provider struct {
 
 // Config is the top-level app configuration.
 type Config struct {
+	Hotkey         string     `json:"hotkey"`
 	Providers      []Provider `json:"providers"`
 	ActiveProvider string     `json:"activeProvider"`
 	ResultW        int        `json:"resultWidth"`
@@ -25,6 +26,7 @@ type Config struct {
 }
 
 const defaultResultW, defaultResultH = 480, 320
+const defaultHotkey = "ctrl+alt+`"
 
 func configPath() (string, error) {
 	dir, err := os.UserConfigDir()
