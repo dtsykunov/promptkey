@@ -29,19 +29,21 @@ func (a *App) showPopup() {
 	debugf("showPopup: cursor pos (%d, %d)", x, y)
 	text, hasContext := captureSelectedText()
 	debugf("showPopup: hasContext=%v", hasContext)
+	debugf("showPopup: captured: %q", text)
 	a.selectedText = text
 	px, py := a.popupPosition(x, y, popupW, popupH)
 	debugf("showPopup: popup position (%d, %d)", px, py)
 	runtime.WindowSetSize(a.ctx, popupW, popupH)
 	runtime.WindowSetPosition(a.ctx, px, py)
 	runtime.WindowShow(a.ctx)
+	a.startFocusWatcher()
 	runtime.EventsEmit(a.ctx, "popup:open", hasContext)
 }
 
 // SendPrompt is called by the frontend on submit.
 // Step 4: echoes to log. Step 5 will replace with streaming AI call.
 func (a *App) SendPrompt(instructions string) {
-	debugf("SendPrompt: instructions len=%d, hasContext=%v", len(instructions), a.selectedText != "")
+	debugf("SendPrompt: instructions=%q, hasContext=%v", instructions, a.selectedText != "")
 	msg := instructions
 	if a.selectedText != "" {
 		msg += "\n\n[context] " + a.selectedText

@@ -11,7 +11,7 @@ Lives in the system tray. Works on macOS and Windows. Supports any OpenAI-compat
 ## How It Works
 
 1. Select some text (optional) in any application
-2. Press the hotkey (default: `Ctrl+Shift+Space`)
+2. Press the hotkey (default: `Ctrl+Shift+\``)
 3. A floating input appears near your cursor — a paperclip icon indicates if context was captured
 4. Type instructions, or press Enter or click ↵ to act on the selected text alone
 5. The AI response streams into a result overlay
@@ -65,7 +65,7 @@ Stored at:
 
 ```json
 {
-  "hotkey": "ctrl+shift+space",
+  "hotkey": "ctrl+shift+`",
   "theme": "auto",
   "providers": [
     {

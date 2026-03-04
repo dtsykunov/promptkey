@@ -12,7 +12,7 @@ const (
 	modControl  = 0x0002
 	modShift    = 0x0004
 	modNoRepeat = 0x4000
-	vkSpace     = 0x20
+	vkGrave     = 0xC0 // VK_OEM_3 — the ` / ~ key
 	wmHotkey    = 0x0312
 )
 
@@ -39,7 +39,7 @@ type winMsg struct {
 func (a *App) startHotkey(cb func()) {
 	go func() {
 		runtime.LockOSThread()
-		r, _, _ := pRegisterHotKey.Call(0, 1, modControl|modShift|modNoRepeat, vkSpace)
+		r, _, _ := pRegisterHotKey.Call(0, 1, modControl|modShift|modNoRepeat, vkGrave)
 		debugf("startHotkey: RegisterHotKey returned %d (0=failed)", r)
 		var msg winMsg
 		for {

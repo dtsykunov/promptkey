@@ -29,9 +29,7 @@
       contextCaptured = !!hasContext
       input?.focus()
     })
-    EventsOn('wails:window:unfocus', () => {
-      if (ready) dismiss()
-    })
+    EventsOn('popup:dismiss', dismiss)
   })
 </script>
 
