@@ -1,2 +1,5 @@
 .env
 .mcp.json
+promptkey/build/bin/
+promptkey/frontend/node_modules/
+promptkey/frontend/dist/

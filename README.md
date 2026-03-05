@@ -1,8 +1,10 @@
 # PromptKey
 
+> **This project is on hiatus and not actively maintained.**
+
 Press a hotkey. A floating prompt appears near your cursor. Type instructions. Hit Enter. Get an AI response in a result overlay with Copy and Close buttons.
 
-Lives in the system tray. Works on macOS and Windows. Supports any OpenAI-compatible endpoint — cloud or self-hosted.
+Lives in the system tray. **Windows only.** Supports any OpenAI-compatible endpoint — cloud or self-hosted.
 
 ---
 
@@ -24,32 +26,24 @@ Lives in the system tray. Works on macOS and Windows. Supports any OpenAI-compat
 
 **AI flow:** `app.SendPrompt(instructions string)` (bound Go method) → goroutine streams response → `runtime.EventsEmit(ctx, "ai:chunk", chunk)` per token → `ai:done` on completion → frontend transitions to result view.
 
----
-
-## Prompt Construction
-
-- **System prompt:** configurable per provider, defaults to `"You are a concise, helpful assistant."`
-- **User message:** the instructions typed by the user
+**Context capture:** On each hotkey press, clipboard content, active window title, date/time, OS version, and locale are captured and injected into the system prompt via `{{variable}}` placeholders.
 
 ---
 
 ## Config
 
-Stored at:
-- macOS: `~/Library/Application Support/promptkey/config.json`
-- Windows: `%APPDATA%\promptkey\config.json`
+Stored at `%APPDATA%\promptkey\config.json`.
 
 ```json
 {
   "hotkey": "ctrl+alt+`",
-  "theme": "auto",
   "providers": [
     {
       "name": "Claude",
       "baseURL": "https://api.anthropic.com/v1",
       "apiKey": "sk-...",
       "model": "claude-sonnet-4-6",
-      "systemPrompt": "You are a concise, helpful assistant."
+      "systemPrompt": "You are a quick-reference assistant..."
     },
     {
       "name": "Ollama",
@@ -63,26 +57,9 @@ Stored at:
 }
 ```
 
-Any OpenAI-compatible provider works: OpenAI, Anthropic, Mistral, Groq, Ollama, LM Studio, Jan, and others.
+Any OpenAI-compatible provider works: OpenAI, Anthropic (via compatible endpoint), Mistral, Groq, Perplexity, Ollama, LM Studio, and others.
 
----
-
-## Platform Notes
-
-**macOS:** Set `LSUIElement = true` in `Info.plist` (no Dock icon). Accessibility permission required for the global hotkey — prompt the user on first launch with a direct link to System Settings → Privacy & Security → Accessibility.
-
-**Windows:** No taskbar entry in tray mode. Tray icon must be `.ico`. Use `RegisterHotKey` via `golang.org/x/sys/windows`.
-
----
-
-## Build Order
-
-1. Tray icon appears, Quit exits cleanly
-2. Hotkey shows/hides a frameless window near cursor
-3. Text input in popup — Escape closes, Enter submits (echo only, no AI yet)
-4. Real streaming AI call, result shown in result view with Copy + Close buttons
-5. Config system — load/save JSON, settings window to manage providers and hotkey
-6. Polish — error states, permission prompts, transitions, opacity
+Template variables available in system prompts: `{{clipboard}}` `{{app}}` `{{date}}` `{{time}}` `{{datetime}}` `{{os}}` `{{locale}}`
 
 ---
 
@@ -91,17 +68,10 @@ Any OpenAI-compatible provider works: OpenAI, Anthropic, Mistral, Groq, Ollama, 
 **Prerequisites:** Go 1.21+, Node.js 18+, [Wails CLI](https://wails.io/docs/gettingstarted/installation)
 
 ```bash
-wails dev                                # development with hot reload
-wails build                              # production binary, current platform
-wails build -platform darwin/universal   # macOS universal (Intel + Apple Silicon)
-wails build -platform windows/amd64
+# from promptkey/
+make build   # release binary (no console window)
+make debug   # debug binary (console window + verbose logs)
 ```
-
----
-
-## Permissions
-
-**macOS only:** Accessibility access is required (System Settings → Privacy & Security → Accessibility) for the global hotkey. The app will prompt on first launch.
 
 ---
 
